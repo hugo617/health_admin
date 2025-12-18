@@ -1,57 +1,57 @@
 import {
-  mysqlTable,
+  pgTable,
   varchar,
-  int,
+  integer,
   timestamp,
   boolean,
   text,
   json,
   unique
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-export const users = mysqlTable('users', {
-  id: int('id').primaryKey().autoincrement(),
+export const users = pgTable('users', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   username: varchar('username', { length: 50 }).notNull(),
   password: varchar('password', { length: 255 }).notNull(),
   avatar: varchar('avatar', { length: 255 }).default('/avatars/default.jpg'),
-  roleId: int('role_id').notNull(),
+  roleId: integer('role_id').notNull(),
   isSuperAdmin: boolean('is_super_admin').default(false),
   status: varchar('status', { length: 20 }).default('active'), // active, disabled
   lastLoginAt: timestamp('last_login_at'),
   createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+  updatedAt: timestamp('updated_at').defaultNow()
 });
 
-export const roles = mysqlTable('roles', {
-  id: int('id').primaryKey().autoincrement(),
+export const roles = pgTable('roles', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   name: varchar('name', { length: 50 }).notNull(),
   isSuper: boolean('is_super').default(false),
   description: varchar('description', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+  updatedAt: timestamp('updated_at').defaultNow()
 });
 
 // 权限表
-export const permissions = mysqlTable('permissions', {
-  id: int('id').primaryKey().autoincrement(),
+export const permissions = pgTable('permissions', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   name: varchar('name', { length: 50 }).notNull(),
   code: varchar('code', { length: 100 }).notNull().unique(),
   description: varchar('description', { length: 255 }),
-  parentId: int('parent_id'), // 父权限ID，null表示顶级权限
-  sortOrder: int('sort_order').default(0), // 排序字段
+  parentId: integer('parent_id'), // 父权限ID，null表示顶级权限
+  sortOrder: integer('sort_order').default(0), // 排序字段
   createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow()
+  updatedAt: timestamp('updated_at').defaultNow()
 });
 
 // 角色-权限关联表
-export const rolePermissions = mysqlTable(
+export const rolePermissions = pgTable(
   'role_permissions',
   {
-    id: int('id').primaryKey().autoincrement(),
-    roleId: int('role_id').notNull(),
-    permissionId: int('permission_id').notNull(),
+    id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+    roleId: integer('role_id').notNull(),
+    permissionId: integer('permission_id').notNull(),
     createdAt: timestamp('created_at').defaultNow()
   },
   (t) => ({
@@ -60,18 +60,18 @@ export const rolePermissions = mysqlTable(
 );
 
 // 系统日志表
-export const systemLogs = mysqlTable('system_logs', {
-  id: int('id').primaryKey().autoincrement(),
+export const systemLogs = pgTable('system_logs', {
+  id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
   level: varchar('level', { length: 20 }).notNull(), // info, warn, error, debug
   action: varchar('action', { length: 100 }).notNull(), // 操作类型
   module: varchar('module', { length: 50 }).notNull(), // 模块名称
   message: text('message').notNull(), // 日志消息
   details: json('details'), // 详细信息 JSON
-  userId: int('user_id'), // 操作用户ID
+  userId: integer('user_id'), // 操作用户ID
   userAgent: varchar('user_agent', { length: 500 }), // 用户代理
   ip: varchar('ip', { length: 45 }), // IP地址
   requestId: varchar('request_id', { length: 100 }), // 请求ID
-  duration: int('duration'), // 执行时间(毫秒)
+  duration: integer('duration'), // 执行时间(毫秒)
   createdAt: timestamp('created_at').defaultNow()
 });
 

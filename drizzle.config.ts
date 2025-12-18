@@ -5,14 +5,10 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 export default defineConfig({
-  dialect: 'mysql', // 'mysql' | 'sqlite' | 'turso'
+  dialect: 'postgresql', // 'postgresql' | 'mysql' | 'sqlite'
   schema: './src/db/schema.ts',
   dbCredentials: {
-    host: process.env.DATABASE_HOST!,
-    port: Number(process.env.DATABASE_PORT) || 3306,
-    user: process.env.DATABASE_USERNAME!,
-    password: process.env.DATABASE_PASSWORD!,
-    database: process.env.DATABASE_NAME!,
+    url: process.env.DATABASE_URL || 'postgresql://star:@localhost:5432/n_admin',
   },
   tablesFilter: ['!_*'],
   verbose: true,

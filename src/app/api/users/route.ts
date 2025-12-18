@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { eq, like, and, gte, lte, sql } from 'drizzle-orm';
 import { Logger } from '@/lib/logger';
 import { getCurrentUser } from '@/lib/auth';
+import { formatDateTime } from '@/lib/timezone';
 import { successResponse, errorResponse } from '@/service/response';
 
 export async function GET(request: Request) {
@@ -82,7 +83,14 @@ export async function GET(request: Request) {
 
     const total = totalResult[0]?.count || 0;
 
-    return successResponse(userList, {
+    // 格式化用户数据，确保时间显示为上海时区
+    const formattedUserList = userList.map(user => ({
+      ...user,
+      createdAt: formatDateTime(user.createdAt),
+      lastLoginAt: user.lastLoginAt ? formatDateTime(user.lastLoginAt) : null
+    }));
+
+    return successResponse(formattedUserList, {
       page,
       limit,
       total: Number(total),

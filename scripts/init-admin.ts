@@ -17,7 +17,7 @@ async function initSuperAdminRole() {
       name: '超级管理员',
       description: '系统超级管理员，拥有所有权限',
       isSuper: true
-    }).$returningId();
+    }).returning();
 
     // 删除现有权限（如果存在）
     await db.delete(permissions);
@@ -58,7 +58,7 @@ async function initSuperAdminRole() {
     // 逐个插入权限并收集ID
     const insertedPermissionIds = [];
     for (const permission of permissionList) {
-      const [result] = await db.insert(permissions).values(permission).$returningId();
+      const [result] = await db.insert(permissions).values(permission).returning();
       insertedPermissionIds.push({ id: result.id });
     }
 

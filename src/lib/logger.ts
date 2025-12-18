@@ -2,6 +2,7 @@ import { db } from '@/db';
 import { systemLogs } from '@/db/schema';
 import { headers } from 'next/headers';
 import { v4 as uuidv4 } from 'uuid';
+import { getShanghaiTime } from '@/lib/timezone';
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
@@ -42,7 +43,8 @@ export async function createLog(data: LogData) {
       userAgent,
       ip,
       requestId,
-      duration: data.duration || null
+      duration: data.duration || null,
+      createdAt: getShanghaiTime()
     });
   } catch (error) {
     console.error('Failed to create log:', error);

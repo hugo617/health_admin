@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { systemLogs, users } from '@/db/schema';
 import { desc, eq, like, and, gte, lte, count } from 'drizzle-orm';
 import { getUserFromRequest } from '@/lib/server-permissions';
+import { formatDateTime, getShanghaiTime } from '@/lib/timezone';
 import {
   successResponse,
   errorResponse,
@@ -88,7 +89,13 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .offset((page - 1) * limit);
 
-    return successResponse(logs, {
+    // 格式化日志数据，确保时间显示为上海时区
+    const formattedLogs = logs.map(log => ({
+      ...log,
+      createdAt: formatDateTime(log.createdAt)
+    }));
+
+    return successResponse(formattedLogs, {
       page,
       limit,
       total,
