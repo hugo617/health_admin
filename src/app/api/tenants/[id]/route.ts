@@ -307,7 +307,7 @@ export async function PUT(
         error: {
           code: 'VALIDATION_ERROR',
           message: '参数验证失败',
-          details: error.errors
+          details: error.issues
         }
       }, { status: 400 });
     }

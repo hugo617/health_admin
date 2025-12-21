@@ -24,7 +24,7 @@ import {
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { AdvancedFilterContainer } from '@/components/shared/advanced-filter-container';
 
-import { UserFilters as UserFiltersType, Role } from '../types';
+import { UserFilters as UserFiltersType, Role, Tenant, Organization } from '../types';
 import { STATUS_OPTIONS } from '../constants';
 
 interface UserFiltersProps {
@@ -32,6 +32,10 @@ interface UserFiltersProps {
   filters: UserFiltersType;
   /** 角色选项 */
   roles: Role[];
+  /** 租户选项 */
+  tenants?: Tenant[];
+  /** 组织选项 */
+  organizations?: Organization[];
   /** 查询回调 */
   onSearch: (filters: Partial<UserFiltersType>) => void;
   /** 重置回调 */
@@ -47,18 +51,26 @@ interface UserFiltersProps {
 export function UserFilters({
   filters,
   roles,
+  tenants = [],
+  organizations = [],
   onSearch,
   onReset,
   loading = false
 }: UserFiltersProps) {
   // 本地表单状态
   const [formData, setFormData] = useState<UserFiltersType>({
+    search: '',
     username: '',
+    realName: '',
     phone: '',
     email: '',
-    roleId: '',
+    roleId: undefined,
+    tenantId: undefined,
+    organizationId: undefined,
     status: 'all',
     dateRange: undefined,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
     page: 1,
     limit: 10
   });
@@ -69,12 +81,18 @@ export function UserFilters({
   // 同步外部 filters 到本地表单状态
   useEffect(() => {
     setFormData({
+      search: filters.search || '',
       username: filters.username || '',
+      realName: filters.realName || '',
       phone: filters.phone || '',
       email: filters.email || '',
-      roleId: filters.roleId || '',
+      roleId: filters.roleId,
+      tenantId: filters.tenantId,
+      organizationId: filters.organizationId,
       status: filters.status || 'all',
       dateRange: filters.dateRange,
+      sortBy: filters.sortBy || 'createdAt',
+      sortOrder: filters.sortOrder || 'desc',
       page: filters.page || 1,
       limit: filters.limit || 10
     });
@@ -105,12 +123,18 @@ export function UserFilters({
    */
   const handleReset = () => {
     const resetData = {
+      search: '',
       username: '',
+      realName: '',
       phone: '',
       email: '',
-      roleId: '',
+      roleId: undefined,
+      tenantId: undefined,
+      organizationId: undefined,
       status: 'all' as const,
       dateRange: undefined,
+      sortBy: 'createdAt' as const,
+      sortOrder: 'desc' as const,
       page: 1,
       limit: 10
     };
@@ -132,12 +156,18 @@ export function UserFilters({
    * 检查是否有激活的筛选条件
    */
   const hasActiveFilters = Boolean(
+      formData.search ||
       formData.username ||
+      formData.realName ||
       formData.phone ||
       formData.email ||
       formData.roleId ||
+      formData.tenantId ||
+      formData.organizationId ||
       (formData.status && formData.status !== 'all') ||
-      formData.dateRange
+      formData.dateRange ||
+      (formData.sortBy !== 'createdAt') ||
+      (formData.sortOrder !== 'desc')
   );
 
   /**
@@ -145,16 +175,41 @@ export function UserFilters({
    */
   const renderQuickSearch = () => (
     <div className='flex items-center gap-3'>
-      {/* 用户名搜索 */}
+      {/* 全局搜索 */}
       <div className='relative max-w-sm flex-1'>
         <Search className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
         <Input
-          placeholder='搜索用户名...'
-          value={formData.username || ''}
-          onChange={(e) => updateFormField('username', e.target.value)}
+          placeholder='搜索用户名、姓名或邮箱...'
+          value={formData.search || ''}
+          onChange={(e) => updateFormField('search', e.target.value)}
           onKeyDown={handleKeyPress}
           className='pl-10'
         />
+      </div>
+
+      {/* 排序选项 */}
+      <div className='flex items-center gap-2'>
+        <span className='text-sm text-muted-foreground'>排序:</span>
+        <Select
+          value={`${formData.sortBy}_${formData.sortOrder}`}
+          onValueChange={(value) => {
+            const [sortBy, sortOrder] = value.split('_');
+            updateFormField('sortBy', sortBy);
+            updateFormField('sortOrder', sortOrder);
+          }}
+        >
+          <SelectTrigger className='w-32'>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value='createdAt_desc'>创建时间 ↓</SelectItem>
+            <SelectItem value='createdAt_asc'>创建时间 ↑</SelectItem>
+            <SelectItem value='username_desc'>用户名 ↓</SelectItem>
+            <SelectItem value='username_asc'>用户名 ↑</SelectItem>
+            <SelectItem value='lastLoginAt_desc'>最近登录 ↓</SelectItem>
+            <SelectItem value='lastLoginAt_asc'>最近登录 ↑</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* 查询按钮 */}
@@ -199,8 +254,8 @@ export function UserFilters({
    */
   const renderAdvancedFilterForm = () => (
     <div className='grid gap-4'>
-      {/* 第一行：用户名和邮箱 */}
-      <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+      {/* 第一行：用户名、真实姓名和邮箱 */}
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
         <div className='space-y-2'>
           <Label>用户名</Label>
           <Input
@@ -211,11 +266,11 @@ export function UserFilters({
           />
         </div>
         <div className='space-y-2'>
-          <Label>手机号码</Label>
+          <Label>真实姓名</Label>
           <Input
-            placeholder='请输入手机号码'
-            value={formData.phone || ''}
-            onChange={(e) => updateFormField('phone', e.target.value)}
+            placeholder='请输入真实姓名'
+            value={formData.realName || ''}
+            onChange={(e) => updateFormField('realName', e.target.value)}
             onKeyDown={handleKeyPress}
           />
         </div>
@@ -230,14 +285,23 @@ export function UserFilters({
         </div>
       </div>
 
-      {/* 第二行：角色和状态 */}
-      <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+      {/* 第二行：手机号码、角色和状态 */}
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+        <div className='space-y-2'>
+          <Label>手机号码</Label>
+          <Input
+            placeholder='请输入手机号码'
+            value={formData.phone || ''}
+            onChange={(e) => updateFormField('phone', e.target.value)}
+            onKeyDown={handleKeyPress}
+          />
+        </div>
         <div className='space-y-2'>
           <Label>角色</Label>
           <Select
-            value={formData.roleId || 'all'}
+            value={formData.roleId ? String(formData.roleId) : 'all'}
             onValueChange={(value) =>
-              updateFormField('roleId', value === 'all' ? '' : value)
+              updateFormField('roleId', value === 'all' ? undefined : Number(value))
             }
           >
             <SelectTrigger className='w-full'>
@@ -247,7 +311,7 @@ export function UserFilters({
               <SelectItem value='all'>全部角色</SelectItem>
               {roles.map((role) => (
                 <SelectItem key={role.id} value={String(role.id)}>
-                  {role.name}
+                  {role.name} ({role.code})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -273,7 +337,59 @@ export function UserFilters({
         </div>
       </div>
 
-      {/* 第三行：创建时间范围 */}
+      {/* 第三行：租户和组织 */}
+      {(tenants.length > 0 || organizations.length > 0) && (
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+          {tenants.length > 0 && (
+            <div className='space-y-2'>
+              <Label>租户</Label>
+              <Select
+                value={formData.tenantId ? String(formData.tenantId) : 'all'}
+                onValueChange={(value) =>
+                  updateFormField('tenantId', value === 'all' ? undefined : Number(value))
+                }
+              >
+                <SelectTrigger className='w-full'>
+                  <SelectValue placeholder='选择租户' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>全部租户</SelectItem>
+                  {tenants.map((tenant) => (
+                    <SelectItem key={tenant.id} value={String(tenant.id)}>
+                      {tenant.name} ({tenant.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {organizations.length > 0 && (
+            <div className='space-y-2'>
+              <Label>组织</Label>
+              <Select
+                value={formData.organizationId ? String(formData.organizationId) : 'all'}
+                onValueChange={(value) =>
+                  updateFormField('organizationId', value === 'all' ? undefined : Number(value))
+                }
+              >
+                <SelectTrigger className='w-full'>
+                  <SelectValue placeholder='选择组织' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='all'>全部组织</SelectItem>
+                  {organizations.map((org) => (
+                    <SelectItem key={org.id} value={String(org.id)}>
+                      {org.name} ({org.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 第四行：创建时间范围 */}
       <div className='grid grid-cols-1 gap-4'>
         <div className='space-y-2'>
           <Label>创建时间</Label>

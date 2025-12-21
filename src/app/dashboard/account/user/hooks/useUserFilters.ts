@@ -22,7 +22,7 @@ export function useUserFilters() {
     }
 
     const urlFilters: UserFilters = {
-      username: searchParams.get('username') || '',
+      username: searchParams.get('username') || searchParams.get('search') || '',
       phone: searchParams.get('phone') || '',
       email: searchParams.get('email') || '',
       roleId: searchParams.get('roleId') || '',

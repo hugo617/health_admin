@@ -417,6 +417,7 @@ export interface TenantIdentificationResult {
 export async function identifyTenant(
   request: NextRequest
 ): Promise<TenantIdentificationResult> {
+  // eslint-disable-next-line prefer-const
   let result: TenantIdentificationResult = {
     tenantId: null,
     tenant: null,

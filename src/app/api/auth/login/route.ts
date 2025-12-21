@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     }
 
     // 检查用户是否被禁用
-    if (user[0].status === 'disabled') {
+    if (user[0].status === 'inactive') {
       await logger.warn(
         '用户认证',
         '用户登录',

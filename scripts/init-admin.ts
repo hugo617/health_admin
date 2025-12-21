@@ -13,11 +13,12 @@ async function initSuperAdminRole() {
   const roleExists = await db.select().from(roles).where(eq(roles.name, '超级管理员'));
   
   if (roleExists.length === 0) {
-    const [superAdminRole] = await db.insert(roles).values({
+    const roleResult = await db.insert(roles).values({
       name: '超级管理员',
       description: '系统超级管理员，拥有所有权限',
       isSuper: true
     }).returning();
+    const superAdminRole = Array.isArray(roleResult) ? roleResult[0] : null;
 
     // 删除现有权限（如果存在）
     await db.delete(permissions);

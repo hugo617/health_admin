@@ -1,6 +1,6 @@
 import { db } from '@/db';
-import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { users, userOrganizations, organizations } from '@/db/schema';
+import { eq, and, inArray } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import {
   preventSuperAdminModification,
@@ -13,6 +13,7 @@ import {
   errorResponse,
   notFoundResponse
 } from '@/service/response';
+import { validateUserUpdate } from '@/lib/validation';
 
 export async function PUT(
   request: Request,
@@ -42,38 +43,92 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { username, email, password, roleId, status } = body;
+    const {
+      username,
+      email,
+      phone,
+      realName,
+      roleId,
+      status,
+      metadata,
+      organizationIds
+    } = body;
+
+    // 验证输入数据
+    const validation = validateUserUpdate({
+      username,
+      email,
+      phone,
+      realName,
+      roleId,
+      status
+    });
+
+    if (!validation.isValid) {
+      const errorMessage = validation.errors.map(err => `${err.field}: ${err.message}`).join('; ');
+      await logger.warn('更新用户', '更新用户失败：输入验证失败', {
+        targetUserId: id,
+        validationErrors: validation.errors,
+        operatorId: currentUser?.id,
+        operatorName: currentUser?.username
+      });
+
+      return errorResponse(errorMessage);
+    }
 
     // 检查是否尝试禁用超级管理员
     if (status !== undefined) {
-      await preventSuperAdminDisable(id, status);
+      await preventSuperAdminDisable(id, status as 'active' | 'inactive' | 'locked');
     }
 
     // 对于其他修改，仍然保护超级管理员（但状态修改已经单独检查）
     if (
       username !== undefined ||
       email !== undefined ||
-      password ||
-      roleId !== undefined
+      phone !== undefined ||
+      realName !== undefined ||
+      roleId !== undefined ||
+      metadata !== undefined ||
+      organizationIds !== undefined
     ) {
       await preventSuperAdminModification(id);
     }
 
-    const updateData: any = {};
+    // 使用事务更新用户信息和组织关联
+    await db.transaction(async (tx) => {
+      const updateData: any = {
+        updatedBy: currentUser?.id
+      };
 
-    // 只更新提供的字段
-    if (username !== undefined) updateData.username = username;
-    if (email !== undefined) updateData.email = email;
-    if (roleId !== undefined) updateData.roleId = roleId;
-    if (status !== undefined) updateData.status = status;
+      // 只更新提供的字段
+      if (username !== undefined) updateData.username = username;
+      if (email !== undefined) updateData.email = email;
+      if (phone !== undefined) updateData.phone = phone;
+      if (realName !== undefined) updateData.realName = realName;
+      if (roleId !== undefined) updateData.roleId = parseInt(roleId);
+      if (status !== undefined) updateData.status = status as 'active' | 'inactive' | 'locked';
+      if (metadata !== undefined) updateData.metadata = metadata;
 
-    // 只有在提供新密码时才更新密码
-    if (password) {
-      const saltRounds = Number(process.env.SALT_ROUNDS || 12);
-      updateData.password = await bcrypt.hash(password, saltRounds);
-    }
+      await tx.update(users).set(updateData).where(eq(users.id, id));
 
-    await db.update(users).set(updateData).where(eq(users.id, id));
+      // 更新组织关联
+      if (organizationIds !== undefined) {
+        // 先删除现有组织关联
+        await tx.delete(userOrganizations).where(eq(userOrganizations.userId, id));
+
+        // 添加新的组织关联
+        if (organizationIds.length > 0) {
+          const orgRelations = organizationIds.map((orgId: number, index: number) => ({
+            userId: id,
+            organizationId: BigInt(orgId),
+            position: '',
+            isMain: index === 0 // 第一个组织为主组织
+          }));
+
+          await tx.insert(userOrganizations).values(orgRelations);
+        }
+      }
+    });
 
     // 记录更新日志
     await logger.info('更新用户', '用户信息更新成功', {
@@ -88,15 +143,24 @@ export async function PUT(
           email !== undefined && originalUser[0].email !== email
             ? { from: originalUser[0].email, to: email }
             : undefined,
+        phone:
+          phone !== undefined && originalUser[0].phone !== phone
+            ? { from: originalUser[0].phone, to: phone }
+            : undefined,
+        realName:
+          realName !== undefined && originalUser[0].realName !== realName
+            ? { from: originalUser[0].realName, to: realName }
+            : undefined,
         roleId:
-          roleId !== undefined && originalUser[0].roleId !== roleId
-            ? { from: originalUser[0].roleId, to: roleId }
+          roleId !== undefined && originalUser[0].roleId !== parseInt(roleId)
+            ? { from: originalUser[0].roleId, to: parseInt(roleId) }
             : undefined,
         status:
           status !== undefined && originalUser[0].status !== status
             ? { from: originalUser[0].status, to: status }
             : undefined,
-        passwordChanged: !!password
+        metadataChanged: metadata !== undefined,
+        organizationsChanged: organizationIds !== undefined
       },
       operatorId: currentUser?.id,
       operatorName: currentUser?.username,
@@ -144,7 +208,14 @@ export async function DELETE(
     }
 
     await preventSuperAdminModification(id);
-    await db.delete(users).where(eq(users.id, id));
+    await db
+      .update(users)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        updatedBy: currentUser?.id
+      })
+      .where(eq(users.id, id));
 
     // 记录删除日志
     await logger.warn('删除用户', '用户删除成功', {

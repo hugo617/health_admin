@@ -27,15 +27,17 @@ export const PAGE_SIZE_OPTIONS = [10, 20, 30, 50, 100];
 export const STATUS_OPTIONS = [
   { label: '全部', value: 'all' },
   { label: '正常', value: 'active' },
-  { label: '禁用', value: 'disabled' }
+  { label: '禁用', value: 'inactive' },
+  { label: '锁定', value: 'locked' }
 ] as const;
 
 /**
  * 用户状态映射
  */
 export const STATUS_MAP = {
-  active: { label: '正常', variant: 'default' as const },
-  disabled: { label: '禁用', variant: 'destructive' as const }
+  active: { label: '正常', variant: 'default' as const, color: 'text-green-700' },
+  inactive: { label: '禁用', variant: 'destructive' as const, color: 'text-red-700' },
+  locked: { label: '锁定', variant: 'secondary' as const, color: 'text-orange-700' }
 } as const;
 
 /**
@@ -62,38 +64,39 @@ export const TABLE_COLUMNS = [
     className: 'text-center w-[60px] font-mono text-sm font-medium'
   },
   {
-    key: 'username',
-    title: '用户名',
-    className: 'font-medium'
+    key: 'avatar',
+    title: '头像',
+    className: 'text-center w-[80px]'
   },
   {
-    key: 'phone',
-    title: '手机号码',
-    className: 'font-medium'
+    key: 'userInfo',
+    title: '用户信息',
+    className: 'font-medium min-w-[250px] max-w-[300px]'
   },
   {
-    key: 'email',
-    title: '邮箱',
-    className: 'font-medium'
+    key: 'contact',
+    title: '联系方式',
+    className: 'font-medium min-w-[250px] max-w-[300px]'
+  },
+  {
+    key: 'organizations',
+    title: '所属组织',
+    className: 'font-medium min-w-[200px] max-w-[250px]'
   },
   {
     key: 'role',
-    title: '角色'
+    title: '角色',
+    className: 'min-w-[150px] max-w-[200px]'
   },
   {
     key: 'status',
     title: '状态',
-    className: 'text-center'
+    className: 'text-center w-[100px]'
   },
   {
-    key: 'lastLoginAt',
-    title: '最近登录时间',
-    className: 'font-medium w-[140px]'
-  },
-  {
-    key: 'createdAt',
-    title: '创建时间',
-    className: 'font-medium w-[140px]'
+    key: 'activity',
+    title: '活动信息',
+    className: 'font-medium min-w-[200px] max-w-[250px]'
   },
   {
     key: 'actions',

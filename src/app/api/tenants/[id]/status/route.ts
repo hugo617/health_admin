@@ -36,7 +36,7 @@ export async function PATCH(
     const existingTenant = await db
       .select()
       .from(tenants)
-      .where(eq(tenants.id, parseInt(tenantId)))
+      .where(eq(tenants.id, BigInt(parseInt(tenantId))))
       .limit(1);
 
     if (existingTenant.length === 0) {
@@ -76,7 +76,7 @@ export async function PATCH(
         status: validatedData.status,
         updatedAt: new Date()
       })
-      .where(eq(tenants.id, parseInt(tenantId)))
+      .where(eq(tenants.id, BigInt(parseInt(tenantId))))
       .returning();
 
     const updatedTenant = result[0];
