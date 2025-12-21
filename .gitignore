@@ -73,3 +73,5 @@ pids
 tmp/
 temp/
 docs
+
+/h5/node_modules
