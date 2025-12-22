@@ -180,3 +180,17 @@ MIT License - 查看 [LICENSE](LICENSE) 文件了解详情
 - 📖 [文档](./DEPLOYMENT.md)
 - 🐛 [问题反馈](https://github.com/guizimo/n-admin/issues)
 - 💬 [讨论](https://github.com/guizimo/n-admin/discussions)
+
+
+管理项目
+  启动项目：
+  ./project-manager.sh start
+
+  关闭项目：
+  ./project-manager.sh stop
+
+  查看状态：
+  ./project-manager.sh status
+
+  重启项目：
+  ./project-manager.sh restart
