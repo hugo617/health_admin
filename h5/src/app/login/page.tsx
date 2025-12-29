@@ -60,7 +60,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">N-Admin</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">health</h1>
           <h2 className="text-xl text-gray-600">移动端登录</h2>
         </div>
       </div>
@@ -135,7 +135,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
-              © 2024 N-Admin. All rights reserved.
+              © 2024 health. All rights reserved.
             </p>
           </div>
         </div>
