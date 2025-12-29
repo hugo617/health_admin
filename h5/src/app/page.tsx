@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { AuthManager } from '@/lib/auth';
 
 export default function HomePage() {
@@ -189,14 +190,14 @@ export default function HomePage() {
                   <span className="text-xs text-gray-600 text-center">服务记录</span>
                 </div>
 
-                <div onClick={() => handleFeatureClick('/service-archive', '服务档案')} className="flex flex-col items-center space-y-2 p-3 rounded-xl hover:bg-gray-50 transition-colors min-w-[70px] cursor-pointer active:scale-95">
+                <Link href="/service-archive" className="flex flex-col items-center space-y-2 p-3 rounded-xl hover:bg-gray-50 transition-colors min-w-[70px] cursor-pointer active:scale-95">
                   <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
                     <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
                   </div>
                   <span className="text-xs text-gray-600 text-center">服务档案</span>
-                </div>
+                </Link>
 
                 {/* <Link href="/help" className="flex flex-col items-center space-y-2 p-3 rounded-xl hover:bg-gray-50 transition-colors min-w-[70px]">
                   <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
