@@ -584,3 +584,51 @@ export interface TenantStatistics {
   permissionCount: number;
   rolePermissionCount: number;
 }
+
+// 客户服务档案表
+export const serviceArchives = pgTable('service_archives', {
+  id: bigint('id', { mode: 'bigint' }).primaryKey().generatedByDefaultAsIdentity(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  customerNo: varchar('customer_no', { length: 50 }).notNull(),
+  channels: jsonb('channels').default('{}'),
+  basicInfo: jsonb('basic_info').default('{}'),
+  healthHistory: jsonb('health_history').default('{}'),
+  subjectiveDemand: text('subjective_demand').default(''),
+  signature1: jsonb('signature1').default('{}'),
+  signature2: jsonb('signature2').default('{}'),
+  footer: jsonb('footer').default('{}'),
+  status: varchar('status', { length: 20 }).default('active'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  createdBy: integer('created_by').references(() => users.id),
+  updatedBy: integer('updated_by').references(() => users.id),
+  deletedAt: timestamp('deleted_at'),
+  isDeleted: boolean('is_deleted').default(false),
+}, (t) => ({
+  userCustomerUnique: unique('service_archives_user_customer_unique').on(t.userId, t.customerNo),
+  userIdIdx: index('idx_service_archives_user_id').on(t.userId),
+  customerNoIdx: index('idx_service_archives_customer_no').on(t.customerNo),
+  statusIdx: index('idx_service_archives_status').on(t.status),
+  createdAtIdx: index('idx_service_archives_created_at').on(t.createdAt),
+  isDeletedIdx: index('idx_service_archives_is_deleted').on(t.isDeleted),
+}));
+
+// 服务档案关系定义
+export const serviceArchivesRelations = relations(serviceArchives, ({ one }) => ({
+  user: one(users, {
+    fields: [serviceArchives.userId],
+    references: [users.id],
+  }),
+  createdByUser: one(users, {
+    fields: [serviceArchives.createdBy],
+    references: [users.id],
+  }),
+  updatedByUser: one(users, {
+    fields: [serviceArchives.updatedBy],
+    references: [users.id],
+  }),
+}));
+
+// 服务档案类型
+export type ServiceArchive = typeof serviceArchives.$inferSelect;
+export type NewServiceArchive = typeof serviceArchives.$inferInsert;

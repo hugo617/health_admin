@@ -160,64 +160,107 @@ export default function ServiceArchivePage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // TODO: 调用API获取数据
-      // const response = await fetch('/api/service-archive');
-      // const result = await response.json();
-      // setData(result.data);
+      // 获取token
+      const token = localStorage.getItem('token');
 
-      // 模拟数据 - 添加一些测试数据以便验证checkbox/radio功能
-      setTimeout(() => {
+      // 调用API获取当前用户的最新档案 - 使用相对路径通过代理
+      const response = await fetch('/api/service-archives?page=1&pageSize=1', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        credentials: 'include', // 发送cookies
+      });
+
+      const result = await response.json();
+
+      if (result.code === 0 && result.data.list.length > 0) {
+        // 如果有档案,加载最新的一个
+        const archive = result.data.list[0];
         setData({
-          ...defaultData,
-          customerNo: 'C20240001',
-          channels: {
-            ...defaultData.channels,
-            friendIntro: true,
-            wechatMini: false,
-          },
-          basicInfo: {
-            ...defaultData.basicInfo,
-            name: '张三',
-            sex: 'male',
-            age: '28',
-          },
-          healthHistory: {
-            ...defaultData.healthHistory,
-            surgeryHistory: {
-              location: '阑尾',
-              time: '2024-06-15',
-            },
-            recentCheckup: {
-              time: '2024-12-01',
-              result: '一切正常',
-            },
-            allergy: 'no',
-          },
-          signature1: {
-            customer: '张三',
-            date: '2024-12-25',
-          },
-          signature2: {
-            customer: '张三',
-            date: '2024-12-25',
-          },
-          footer: {
-            ...defaultData.footer,
-            focusTopics: {
-              ...defaultData.footer.focusTopics,
-              shoulderNeck: true,
-              insomnia: false,
-            },
-          },
+          customerNo: archive.customerNo || '',
+          channels: archive.channels || defaultData.channels,
+          basicInfo: archive.basicInfo || defaultData.basicInfo,
+          healthHistory: archive.healthHistory || defaultData.healthHistory,
+          subjectiveDemand: archive.subjectiveDemand || '',
+          signature1: archive.signature1 || defaultData.signature1,
+          signature2: archive.signature2 || defaultData.signature2,
+          footer: archive.footer || defaultData.footer,
         });
-        setIsLoading(false);
-      }, 500);
+      } else {
+        // 如果没有档案,生成新的客户编号并创建空档案
+        await createNewArchive();
+      }
+
+      setIsLoading(false);
     } catch (error) {
       console.error('加载数据失败:', error);
       setShowToast(true);
       setToastMessage('加载数据失败');
       setTimeout(() => setShowToast(false), 2000);
       setIsLoading(false);
+    }
+  };
+
+  const createNewArchive = async () => {
+    try {
+      // 获取token
+      const token = localStorage.getItem('token');
+
+      // 生成新的客户编号
+      const genResponse = await fetch('/api/service-archives/generate-customer-no', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        credentials: 'include',
+      });
+
+      const genResult = await genResponse.json();
+
+      if (genResult.code === 0) {
+        const customerNo = genResult.data.customerNo;
+
+        // 创建新的空档案 - 只发送必要的数据结构
+        const createResponse = await fetch('/api/service-archives', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            customerNo,
+            channels: defaultData.channels,
+            basicInfo: defaultData.basicInfo,
+            healthHistory: defaultData.healthHistory,
+            subjectiveDemand: defaultData.subjectiveDemand,
+            signature1: defaultData.signature1,
+            signature2: defaultData.signature2,
+            footer: defaultData.footer,
+          }),
+        });
+
+        const createResult = await createResponse.json();
+
+        if (createResult.code === 0) {
+          setData({
+            ...defaultData,
+            customerNo: createResult.data.customerNo,
+          });
+        } else {
+          throw new Error(createResult.message || '创建档案失败');
+        }
+      } else {
+        throw new Error(genResult.message || '生成客户编号失败');
+      }
+    } catch (error: any) {
+      console.error('创建新档案失败:', error);
+      setShowToast(true);
+      setToastMessage(error.message || '创建档案失败');
+      setTimeout(() => setShowToast(false), 2000);
     }
   };
 
@@ -236,25 +279,52 @@ export default function ServiceArchivePage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // TODO: 调用API保存数据
-      // await fetch('/api/service-archive', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data),
-      // });
+      // 获取token
+      const token = localStorage.getItem('token');
 
-      // 模拟保存
-      console.log('保存数据:', data);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // 先获取当前档案列表,找到对应的档案ID
+      const listResponse = await fetch(`/api/service-archives?customerNo=${data.customerNo}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        credentials: 'include',
+      });
 
-      setIsEditing(false);
-      setShowToast(true);
-      setToastMessage('保存成功');
-      setTimeout(() => setShowToast(false), 2000);
-    } catch (error) {
+      const listResult = await listResponse.json();
+
+      if (listResult.code === 0 && listResult.data.list.length > 0) {
+        // 找到了档案,执行更新
+        const archiveId = listResult.data.list[0].id;
+
+        const response = await fetch(`/api/service-archives/${archiveId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (result.code === 0) {
+          setIsEditing(false);
+          setShowToast(true);
+          setToastMessage('保存成功');
+          setTimeout(() => setShowToast(false), 2000);
+        } else {
+          throw new Error(result.message || '保存失败');
+        }
+      } else {
+        throw new Error('未找到要更新的档案');
+      }
+    } catch (error: any) {
       console.error('保存失败:', error);
       setShowToast(true);
-      setToastMessage('保存失败');
+      setToastMessage(error.message || '保存失败');
       setTimeout(() => setShowToast(false), 2000);
     } finally {
       setIsSaving(false);

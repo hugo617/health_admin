@@ -74,6 +74,14 @@ tmp/
 temp/
 docs
 
+# Test files and documentation
+*.test.md
+TEST_*.md
+REGRESSION_TEST*.md
+manual-test.md
+test-*.sh
+*.test.sh
+
 /h5/node_modules
 h5/.next/
 /h5/src/temp
