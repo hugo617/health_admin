@@ -77,20 +77,20 @@ sync_remote() {
 # 运行测试和检查
 run_checks() {
     print_info "运行代码检查..."
-    
+
     # 运行 lint
-    if ! npm run lint; then
+    if ! pnpm run lint; then
         print_error "Lint 检查失败"
         exit 1
     fi
-    
+
     # 运行构建测试
     print_info "测试构建..."
-    if ! npm run build; then
+    if ! pnpm run build; then
         print_error "构建失败"
         exit 1
     fi
-    
+
     print_success "所有检查通过"
 }
 
@@ -168,19 +168,19 @@ main() {
     print_info "执行版本发布..."
     case $release_type in
         patch)
-            npm run release:patch
+            pnpm run release:patch
             ;;
         minor)
-            npm run release:minor
+            pnpm run release:minor
             ;;
         major)
-            npm run release:major
+            pnpm run release:major
             ;;
         pre)
-            npm run release:pre
+            pnpm run release:pre
             ;;
         first)
-            npm run release:first
+            pnpm run release:first
             ;;
     esac
     
@@ -195,7 +195,7 @@ main() {
         read -p "是否推送到远程仓库？(Y/n): " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-            npm run postrelease
+            pnpm run postrelease
             print_success "已推送到远程仓库"
             print_info "GitHub Release: https://github.com/guizimo/n-admin/releases/tag/v$new_version"
         else

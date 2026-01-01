@@ -45,10 +45,10 @@ show_status() {
     # 检查相关进程
     echo ""
     echo "🔍 进程信息:"
-    if pgrep -f "npm run dev" >/dev/null; then
-        echo "✅ npm run dev 进程: 运行中"
+    if pgrep -f "pnpm run dev" >/dev/null; then
+        echo "✅ pnpm run dev 进程: 运行中"
     else
-        echo "❌ npm run dev 进程: 未运行"
+        echo "❌ pnpm run dev 进程: 未运行"
     fi
 
     if pgrep -f "next dev" >/dev/null; then

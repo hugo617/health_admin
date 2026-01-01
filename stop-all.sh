@@ -3,9 +3,9 @@
 echo "🛑 正在停止 N-Admin 项目..."
 echo "================================"
 
-# 停止所有 npm run dev 进程
-echo "🔄 停止 npm run dev 进程..."
-pkill -f "npm run dev" 2>/dev/null || true
+# 停止所有 pnpm run dev 进程
+echo "🔄 停止 pnpm run dev 进程..."
+pkill -f "pnpm run dev" 2>/dev/null || true
 
 # 停止所有 next dev 进程
 echo "🔄 停止 Next.js 开发服务器..."
@@ -47,10 +47,10 @@ fi
 # 检查是否还有相关进程在运行
 echo ""
 echo "🔍 检查剩余进程..."
-if pgrep -f "npm run dev" >/dev/null; then
-    echo "  ⚠️  仍有 npm run dev 进程在运行"
+if pgrep -f "pnpm run dev" >/dev/null; then
+    echo "  ⚠️  仍有 pnpm run dev 进程在运行"
 else
-    echo "  ✅ npm run dev 进程已全部停止"
+    echo "  ✅ pnpm run dev 进程已全部停止"
 fi
 
 if pgrep -f "next dev" >/dev/null; then
