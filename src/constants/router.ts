@@ -8,7 +8,8 @@ import {
   Users,
   Shield,
   Key,
-  Building
+  Building,
+  Building2
 } from 'lucide-react';
 
 // 业务导航列表
@@ -83,6 +84,18 @@ export const systemNavList: NavItem[] = [
           searchShortcut: ['t'],
           searchSection: '账户管理',
           searchPriority: 5
+        }
+      },
+      {
+        title: '组织架构',
+        url: '/dashboard/account/organization',
+        description: '组织架构管理',
+        icon: Building2,
+        searchConfig: {
+          keywords: 'organization management 组织 架构 管理 org',
+          searchShortcut: ['o'],
+          searchSection: '账户管理',
+          searchPriority: 6
         }
       }
     ]

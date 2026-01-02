@@ -38,6 +38,13 @@ export const PERMISSIONS = {
     DELETE: 'admin.tenant.delete',
     CONFIG: 'admin.tenant.config'
   },
+  // 组织管理权限
+  ORGANIZATION: {
+    READ: 'account.organization.read',
+    CREATE: 'account.organization.create',
+    UPDATE: 'account.organization.update',
+    DELETE: 'account.organization.delete'
+  },
   // 系统管理权限
   SYSTEM: {
     CONFIG: 'admin.system.config'
@@ -52,5 +59,6 @@ export const ROUTE_PERMISSIONS = {
   '/dashboard/account/role': [PERMISSIONS.ROLE.READ],
   '/dashboard/account/permission': [PERMISSIONS.PERMISSION.READ],
   '/dashboard/system/logs': [PERMISSIONS.LOG.READ],
-  '/dashboard/account/tenant': [PERMISSIONS.TENANT.READ]
+  '/dashboard/account/tenant': [PERMISSIONS.TENANT.READ],
+  '/dashboard/account/organization': [PERMISSIONS.ORGANIZATION.READ]
 } as const;

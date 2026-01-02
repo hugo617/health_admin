@@ -8,10 +8,11 @@ import { successResponse, errorResponse } from '@/service/response';
 // 获取组织的用户列表
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = BigInt(params.id);
+    const { id: idStr } = await params;
+    const id = BigInt(idStr);
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -78,13 +79,14 @@ export async function GET(
 // 添加用户到组织
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const currentUser = getCurrentUser(request);
   const logger = new Logger('组织用户管理', currentUser?.id);
 
   try {
-    const id = BigInt(params.id);
+    const { id: idStr } = await params;
+    const id = BigInt(idStr);
     const body = await request.json();
     const { userId, position, isMain = false } = body;
 
@@ -180,13 +182,14 @@ export async function POST(
 // 从组织移除用户
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const currentUser = getCurrentUser(request);
   const logger = new Logger('组织用户管理', currentUser?.id);
 
   try {
-    const id = BigInt(params.id);
+    const { id: idStr } = await params;
+    const id = BigInt(idStr);
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

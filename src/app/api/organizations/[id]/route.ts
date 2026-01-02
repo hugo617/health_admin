@@ -9,10 +9,11 @@ import { NextResponse } from 'next/server';
 // 获取组织详情
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = BigInt(params.id);
+    const { id: idStr } = await params;
+    const id = BigInt(idStr);
 
     // 获取组织基本信息
     const orgList = await db
@@ -53,12 +54,13 @@ export async function GET(
 // 更新组织
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const currentUser = getCurrentUser(request);
 
   try {
-    const id = BigInt(params.id);
+    const { id: idStr } = await params;
+    const id = BigInt(idStr);
     const body = await request.json();
     const { name, code, parentId, leaderId, status, sortOrder } = body;
 
@@ -169,12 +171,13 @@ export async function PUT(
 // 删除组织
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const currentUser = getCurrentUser(request);
 
   try {
-    const id = BigInt(params.id);
+    const { id: idStr } = await params;
+    const id = BigInt(idStr);
 
     // 检查组织是否存在
     const existingOrg = await db
